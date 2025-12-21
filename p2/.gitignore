@@ -1,0 +1,9 @@
+
+# Vagrant
+.vagrant/
+.vagrant_private_keys
+*.log
+
+# K3s
+kubecfg.yaml
+kubeconfig

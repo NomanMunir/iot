@@ -1,0 +1,8 @@
+
+# OS
+.DS_Store
+
+# Gitlab local data (if mapped locally)
+gitlab-data/
+gitlab-config/
+gitlab-logs/
