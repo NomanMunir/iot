@@ -6,8 +6,8 @@ machines=[
     :hostname => "nmunirS",
     :ip => "192.168.56.110",
     :box => "generic/debian12",
-    :ram => 2048,
-    :cpu => 2,
+    :ram => 1024,
+    :cpu => 1,
     :script => "./scripts/nmunirS_provision.sh"
   }
 ]
