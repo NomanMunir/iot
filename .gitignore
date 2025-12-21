@@ -1,0 +1,9 @@
+
+# Vagrant / VM artifacts
+**/.vagrant/
+*.log
+
+# K3s join token generated during provisioning (do not commit)
+p1/node-token
+p1/node-token.ready
+

@@ -1,11 +1,32 @@
 #!/bin/bash
+set -euo pipefail
+
 sudo apt-get update
 sudo apt-get install -y curl ca-certificates ufw
 sudo ufw disable
 
+TOKEN_FILE="/vagrant/node-token"
+READY_FILE="/vagrant/node-token.ready"
+
+# Wait until the server has installed k3s and published a fresh token.
+for i in {1..60}; do
+  if [ -f "$READY_FILE" ] && [ -s "$TOKEN_FILE" ]; then
+    break
+  fi
+  sleep 5
+done
+
+if [ ! -f "$READY_FILE" ] || [ ! -s "$TOKEN_FILE" ]; then
+  echo "Timed out waiting for server token at $TOKEN_FILE"
+  exit 1
+fi
+
+# Strip CR/LF in case host filesystem introduces Windows line endings.
+K3S_TOKEN_VALUE="$(tr -d '\r\n' < "$TOKEN_FILE")"
+
 #Install k3s in agent mode (need multiple try, can randomly fail)
 for i in {1..3}; do
-  if curl -sfL https://get.k3s.io | K3S_URL="https://192.168.56.110:6443" K3S_TOKEN="12345" INSTALL_K3S_EXEC="agent --node-ip=192.168.56.111 --flannel-iface=eth1" sh -s; then
+	if curl -sfL https://get.k3s.io | K3S_URL="https://192.168.56.110:6443" K3S_TOKEN="${K3S_TOKEN_VALUE}" INSTALL_K3S_EXEC="agent --node-ip=192.168.56.111 --flannel-iface=eth1" sh -s -; then
 	break
   else
     if [ $i -eq 3 ]; then
