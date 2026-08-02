@@ -1,37 +1,18 @@
-#!/bin/bash
+#!/bin/sh
 set -euo pipefail
 
-sudo apt-get update
-sudo apt-get install -y curl ca-certificates ufw
-sudo ufw disable
-
 # Add local DNS entries to prevent reverse DNS lookup timeouts
-echo "192.168.56.110 nmunirS" | sudo tee -a /etc/hosts
-echo "192.168.56.111 nmunirSW" | sudo tee -a /etc/hosts
+echo "192.168.56.110 nmunirS" >> /etc/hosts
+echo "192.168.56.111 nmunirSW" >> /etc/hosts
+
+# Update package index and install required packages for Alpine
+apk update
+apk add curl chrony iptables coreutils
 
 # Ensure time is synchronized (critical for TLS certificates)
-sudo apt-get install -y systemd-timesyncd
-sudo systemctl enable --now systemd-timesyncd
+rc-update add chronyd default
+rc-service chronyd start
 sleep 3
-
-TOKEN_FILE="/vagrant/node-token"
-READY_FILE="/vagrant/node-token.ready"
-
-# Wait until the server has installed k3s and published a fresh token.
-for i in {1..60}; do
-  if [ -f "$READY_FILE" ] && [ -s "$TOKEN_FILE" ]; then
-    break
-  fi
-  sleep 5
-done
-
-if [ ! -f "$READY_FILE" ] || [ ! -s "$TOKEN_FILE" ]; then
-  echo "Timed out waiting for server token at $TOKEN_FILE"
-  exit 1
-fi
-
-# Strip CR/LF in case host filesystem introduces Windows line endings.
-K3S_TOKEN_VALUE="$(tr -d '\r\n' < "$TOKEN_FILE")"
 
 # Wait for IP to be assigned
 until ip -o addr show | grep -q '192\.168\.56\.111'; do sleep 2; done
@@ -40,26 +21,22 @@ until ip -o addr show | grep -q '192\.168\.56\.111'; do sleep 2; done
 IFACE="$(ip -o addr show | grep '192\.168\.56\.' | awk '{print $2}' | head -n 1)"
 IFACE="${IFACE:-eth1}"
 
-# Verify connection to server API endpoint
-echo "Verifying connection to K3s server at https://192.168.56.110:6443..."
-timeout 60 bash -c 'until curl -k -s https://192.168.56.110:6443/ping | grep -q "pong"; do sleep 2; done'
+# Verify connection to server API endpoint before attempting to install k3s-agent
+echo "Waiting for K3s server API to be reachable at https://192.168.56.110:6443..."
+timeout 300 sh -c 'until curl -k -s https://192.168.56.110:6443/ping | grep -q "pong"; do sleep 5; done'
 
-#Install k3s in agent mode (need multiple try, can randomly fail)
-for i in {1..3}; do
-	if curl -sfL https://get.k3s.io | K3S_URL="https://192.168.56.110:6443" K3S_TOKEN="${K3S_TOKEN_VALUE}" INSTALL_K3S_EXEC="agent --node-ip=192.168.56.111 --flannel-iface=${IFACE}" sh -s -; then
+# Install k3s in agent mode
+# We securely use the $K3S_TOKEN environment variable provided by Vagrant
+for i in $(seq 1 3); do
+	if curl -sfL https://get.k3s.io | K3S_URL="https://192.168.56.110:6443" K3S_TOKEN="${K3S_TOKEN}" INSTALL_K3S_EXEC="agent --node-ip=192.168.56.111 --flannel-iface=${IFACE}" sh -s -; then
 	break
   else
-    if [ $i -eq 3 ]; then
-	echo "Failed to install k3s after 3 attempts"
+    if [ "$i" -eq 3 ]; then
+	echo "Failed to install k3s agent after 3 attempts"
 	exit 1
     fi
     sleep 10
   fi
 done
 
-sleep 15
-
-# K3s ships with kubectl functionality; expose it as `kubectl` if needed.
-if ! command -v kubectl >/dev/null 2>&1; then
-  sudo ln -sf /usr/local/bin/k3s /usr/local/bin/kubectl
-fi
+sleep 10
