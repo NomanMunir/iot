@@ -12,18 +12,12 @@ spec:
       labels:
         app: app1
     spec:
-      volumes:
-      - name: app1-html
-        configMap:
-          name: app1-html
       containers:
       - name: app1
-        image: nginx:stable-alpine
+        image: paulbouwer/hello-kubernetes:1.10
         imagePullPolicy: IfNotPresent
         ports:
-        - containerPort: 80
-        volumeMounts:
-        - name: app1-html
-          mountPath: /usr/share/nginx/html/index.html
-          subPath: index.html
-          readOnly: true
+        - containerPort: 8080
+        env:
+        - name: MESSAGE
+          value: "Hello from app1."
