@@ -7,13 +7,11 @@ require 'securerandom'
 # This replaces the unreliable synced-folder token passing.
 k3s_token = SecureRandom.hex(24)
 
-# Provider variable: Set to "libvirt" (KVM) or "virtualbox"
-# Can also be set via environment variable: export VAGRANT_DEFAULT_PROVIDER=libvirt
 PROVIDER = ENV['VAGRANT_DEFAULT_PROVIDER'] || "libvirt"
 
 Vagrant.configure("2") do |config|
 
-  BOX_IMAGE = "generic/alpine319"
+  BOX_IMAGE = "generic/alpine320"
 
   # KVM / Libvirt Provider Config (Primary)
   config.vm.provider "libvirt" do |lv|
