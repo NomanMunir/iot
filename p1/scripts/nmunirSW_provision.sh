@@ -14,12 +14,7 @@ rc-update add chronyd default
 rc-service chronyd start
 sleep 3
 
-# Wait for IP to be assigned
-until ip -o addr show | grep -q '192\.168\.56\.111'; do sleep 2; done
-
-# Dynamically detect interface matching 192.168.56.x (fallback to eth1)
-IFACE="$(ip -o addr show | grep '192\.168\.56\.' | awk '{print $2}' | head -n 1)"
-IFACE="${IFACE:-eth1}"
+IFACE="eth1"
 
 # Verify connection to server API endpoint before attempting to install k3s-agent
 echo "Waiting for K3s server API to be reachable at https://192.168.56.110:6443..."

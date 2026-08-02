@@ -14,12 +14,7 @@ rc-update add chronyd default
 rc-service chronyd start
 sleep 3
 
-# Wait for IP to be assigned
-until ip -o addr show | grep -q '192\.168\.56\.110'; do sleep 2; done
-
-# Dynamically detect interface matching 192.168.56.x (fallback to eth1)
-IFACE="$(ip -o addr show | grep '192\.168\.56\.' | awk '{print $2}' | head -n 1)"
-IFACE="${IFACE:-eth1}"
+IFACE="eth1"
 
 # Install k3s in server mode (host-gw avoids nested virtualization MTU drops)
 # We securely use the $K3S_TOKEN environment variable provided by Vagrant
