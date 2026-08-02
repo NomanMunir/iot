@@ -4,6 +4,9 @@ set -euo pipefail
 sudo apt-get update
 sudo apt-get install -y curl ca-certificates
 
+# Add local DNS entries to prevent reverse DNS lookup timeouts
+echo "192.168.56.110 nmunirS" | sudo tee -a /etc/hosts
+
 # Dynamically detect interface matching 192.168.56.x (fallback to eth1)
 IFACE="$(ip -o addr show | grep '192\.168\.56\.' | awk '{print $2}' | head -n 1)"
 IFACE="${IFACE:-eth1}"

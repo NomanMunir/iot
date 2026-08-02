@@ -5,6 +5,10 @@ sudo apt-get update
 sudo apt-get install -y curl ca-certificates ufw openssl
 sudo ufw disable
 
+# Add local DNS entries to prevent reverse DNS lookup timeouts
+echo "192.168.56.110 nmunirS" | sudo tee -a /etc/hosts
+echo "192.168.56.111 nmunirSW" | sudo tee -a /etc/hosts
+
 TOKEN_FILE="/vagrant/node-token"
 READY_FILE="/vagrant/node-token.ready"
 
