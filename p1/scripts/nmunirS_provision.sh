@@ -39,6 +39,10 @@ done
 echo "Waiting for K3s server API to be ready..."
 timeout 120 sh -c 'until curl -k -s https://192.168.56.110:6443/ping | grep -q "pong"; do sleep 2; done'
 
+# Wait for kubeconfig to be generated
+echo "Waiting for k3s.yaml to be generated..."
+until [ -f /etc/rancher/k3s/k3s.yaml ]; do sleep 2; done
+
 # Setup config for kubectl
 chmod 644 /etc/rancher/k3s/k3s.yaml
 echo "export KUBECONFIG=/etc/rancher/k3s/k3s.yaml" >> /home/vagrant/.profile
