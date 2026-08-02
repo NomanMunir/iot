@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gitlab
+  namespace: gitlab
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gitlab
+  template:
+    metadata:
+      labels:
+        app: gitlab
+    spec:
+      containers:
+      - name: gitlab
+        image: gitlab/gitlab-ce:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 80
+        - containerPort: 443
+        - containerPort: 22
+        env:
+        - name: GITLAB_OMNIBUS_CONFIG
+          value: |
+            external_url 'http://gitlab.local:8080'
+            nginx['listen_port'] = 80
+            nginx['listen_https'] = false
+            prometheus_monitoring['enable'] = false
+            gitlab_rails['gitlab_shell_ssh_port'] = 2222
