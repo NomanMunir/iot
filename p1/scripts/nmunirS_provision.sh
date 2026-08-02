@@ -15,9 +15,13 @@ sudo rm -f "$READY_FILE"
 K3S_TOKEN_VALUE="$(openssl rand -hex 24)"
 echo -n "$K3S_TOKEN_VALUE" | sudo tee "$TOKEN_FILE" >/dev/null
 
+# Dynamically detect interface matching 192.168.56.x (fallback to eth1)
+IFACE="$(ip -o addr show | grep '192\.168\.56\.' | awk '{print $2}' | head -n 1)"
+IFACE="${IFACE:-eth1}"
+
 # Install k3s in server mode (need multiple try, can randomly fail)
 for i in {1..3}; do
-	if curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="server --token ${K3S_TOKEN_VALUE} --node-ip=192.168.56.110 --flannel-iface=eth1" sh -s -; then
+	if curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="server --token ${K3S_TOKEN_VALUE} --node-ip=192.168.56.110 --flannel-iface=${IFACE}" sh -s -; then
 	break
   else
     if [ $i -eq 3 ]; then
@@ -28,8 +32,9 @@ for i in {1..3}; do
   fi
 done
 
-
-sleep 15
+# Wait for K3s server API to respond
+echo "Waiting for K3s server API to be ready..."
+timeout 120 bash -c 'until curl -k -s https://192.168.56.110:6443/ping | grep -q "pong"; do sleep 2; done'
 
 # K3s ships with kubectl functionality; expose it as `kubectl` if needed.
 if ! command -v kubectl >/dev/null 2>&1; then

@@ -24,9 +24,17 @@ fi
 # Strip CR/LF in case host filesystem introduces Windows line endings.
 K3S_TOKEN_VALUE="$(tr -d '\r\n' < "$TOKEN_FILE")"
 
+# Dynamically detect interface matching 192.168.56.x (fallback to eth1)
+IFACE="$(ip -o addr show | grep '192\.168\.56\.' | awk '{print $2}' | head -n 1)"
+IFACE="${IFACE:-eth1}"
+
+# Verify connection to server API endpoint
+echo "Verifying connection to K3s server at https://192.168.56.110:6443..."
+timeout 60 bash -c 'until curl -k -s https://192.168.56.110:6443/ping | grep -q "pong"; do sleep 2; done'
+
 #Install k3s in agent mode (need multiple try, can randomly fail)
 for i in {1..3}; do
-	if curl -sfL https://get.k3s.io | K3S_URL="https://192.168.56.110:6443" K3S_TOKEN="${K3S_TOKEN_VALUE}" INSTALL_K3S_EXEC="agent --node-ip=192.168.56.111 --flannel-iface=eth1" sh -s -; then
+	if curl -sfL https://get.k3s.io | K3S_URL="https://192.168.56.110:6443" K3S_TOKEN="${K3S_TOKEN_VALUE}" INSTALL_K3S_EXEC="agent --node-ip=192.168.56.111 --flannel-iface=${IFACE}" sh -s -; then
 	break
   else
     if [ $i -eq 3 ]; then

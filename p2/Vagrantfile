@@ -9,7 +9,7 @@ machines=[
   {
     :hostname => "nmunirS",
     :ip => "192.168.56.110",
-    :box => "bento/ubuntu-24.04",
+    :box => "debian/bookworm64",
     :ram => 1024,
     :cpu => 1,
     :script => "./scripts/nmunirS_provision.sh"

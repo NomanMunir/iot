@@ -4,9 +4,13 @@ set -euo pipefail
 sudo apt-get update
 sudo apt-get install -y curl ca-certificates
 
+# Dynamically detect interface matching 192.168.56.x (fallback to eth1)
+IFACE="$(ip -o addr show | grep '192\.168\.56\.' | awk '{print $2}' | head -n 1)"
+IFACE="${IFACE:-eth1}"
+
 # Install k3s in server mode (need multiple try, can randomly fail)
 for i in {1..3}; do
-	if curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="server --node-ip=192.168.56.110 --flannel-iface=eth1" sh -s -; then
+	if curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="server --node-ip=192.168.56.110 --flannel-iface=${IFACE}" sh -s -; then
 	break
   else
     if [ $i -eq 3 ]; then
