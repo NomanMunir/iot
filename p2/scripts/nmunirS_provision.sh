@@ -7,13 +7,21 @@ sudo apt-get install -y curl ca-certificates
 # Add local DNS entries to prevent reverse DNS lookup timeouts
 echo "192.168.56.110 nmunirS" | sudo tee -a /etc/hosts
 
+# Ensure time is synchronized (critical for TLS certificates)
+sudo apt-get install -y systemd-timesyncd
+sudo systemctl enable --now systemd-timesyncd
+sleep 3
+
+# Wait for IP to be assigned
+until ip -o addr show | grep -q '192\.168\.56\.110'; do sleep 2; done
+
 # Dynamically detect interface matching 192.168.56.x (fallback to eth1)
 IFACE="$(ip -o addr show | grep '192\.168\.56\.' | awk '{print $2}' | head -n 1)"
 IFACE="${IFACE:-eth1}"
 
-# Install k3s in server mode (need multiple try, can randomly fail)
+# Install k3s in server mode (host-gw avoids nested virtualization MTU drops)
 for i in {1..3}; do
-	if curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="server --node-ip=192.168.56.110 --flannel-iface=${IFACE}" sh -s -; then
+	if curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="server --node-ip=192.168.56.110 --flannel-backend=host-gw --flannel-iface=${IFACE}" sh -s -; then
 	break
   else
     if [ $i -eq 3 ]; then

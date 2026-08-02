@@ -9,6 +9,11 @@ sudo ufw disable
 echo "192.168.56.110 nmunirS" | sudo tee -a /etc/hosts
 echo "192.168.56.111 nmunirSW" | sudo tee -a /etc/hosts
 
+# Ensure time is synchronized (critical for TLS certificates)
+sudo apt-get install -y systemd-timesyncd
+sudo systemctl enable --now systemd-timesyncd
+sleep 3
+
 TOKEN_FILE="/vagrant/node-token"
 READY_FILE="/vagrant/node-token.ready"
 
@@ -27,6 +32,9 @@ fi
 
 # Strip CR/LF in case host filesystem introduces Windows line endings.
 K3S_TOKEN_VALUE="$(tr -d '\r\n' < "$TOKEN_FILE")"
+
+# Wait for IP to be assigned
+until ip -o addr show | grep -q '192\.168\.56\.111'; do sleep 2; done
 
 # Dynamically detect interface matching 192.168.56.x (fallback to eth1)
 IFACE="$(ip -o addr show | grep '192\.168\.56\.' | awk '{print $2}' | head -n 1)"
