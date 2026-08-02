@@ -7,3 +7,4 @@
 # K3s
 kubecfg.yaml
 kubeconfig
+config.yaml
