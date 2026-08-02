@@ -11,7 +11,7 @@ PROVIDER = ENV['VAGRANT_DEFAULT_PROVIDER'] || "libvirt"
 
 Vagrant.configure("2") do |config|
 
-  BOX_IMAGE = "generic/alpine320"
+  BOX_IMAGE = "generic/alpine319"
 
   # KVM / Libvirt Provider Config (Primary)
   config.vm.provider "libvirt" do |lv|

@@ -9,7 +9,7 @@ machines=[
   {
     :hostname => "nmunirS",
     :ip => "192.168.56.110",
-    :box => "generic/alpine320",
+    :box => "generic/alpine319",
     :ram => 1024,
     :cpu => 1,
     :script => "./scripts/nmunirS_provision.sh"
