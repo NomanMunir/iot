@@ -27,7 +27,7 @@ echo "3. Creating K3d Cluster"
 echo "=========================================="
 k3d cluster delete iot-cluster || true
 
-k3d cluster create iot-cluster --port "8080:80@loadbalancer" --port "8443:443@loadbalancer"
+k3d cluster create iot-cluster --api-port 6550 --port "8080:80@loadbalancer" --port "8443:443@loadbalancer"
 
 echo "Waiting for cluster to be ready..."
 kubectl wait --for=condition=Ready nodes --all --timeout=300s

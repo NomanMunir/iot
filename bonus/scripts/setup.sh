@@ -27,7 +27,7 @@ echo "3. Checking K3d Cluster"
 echo "=========================================="
 if ! k3d cluster list iot-cluster >/dev/null 2>&1; then
     echo "Cluster not found. Creating new iot-cluster..."
-    k3d cluster create iot-cluster --port "8080:80@loadbalancer" --port "8443:443@loadbalancer"
+    k3d cluster create iot-cluster --api-port 6550 --port "8080:80@loadbalancer" --port "8443:443@loadbalancer"
 else
     echo "Cluster iot-cluster already exists! Skipping creation."
 fi
