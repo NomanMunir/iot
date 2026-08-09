@@ -43,7 +43,11 @@ kubectl get namespace gitlab >/dev/null 2>&1 || kubectl create namespace gitlab
 echo "=========================================="
 echo "5. Installing Argo CD"
 echo "=========================================="
-kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml --server-side
+if ! kubectl get deployment argocd-server -n argocd >/dev/null 2>&1; then
+    kubectl create -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+else
+    echo "Argo CD is already installed, skipping creation."
+fi
 echo "Waiting for Argo CD to start..."
 kubectl wait --for=condition=available --timeout=600s deployment/argocd-server -n argocd
 
