@@ -41,7 +41,7 @@ kubectl create namespace dev
 echo "=========================================="
 echo "5. Installing Argo CD"
 echo "=========================================="
-kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml --server-side
 
 echo "Waiting for Argo CD to start (this can take a few minutes)..."
 kubectl wait --for=condition=available --timeout=600s deployment/argocd-server -n argocd
