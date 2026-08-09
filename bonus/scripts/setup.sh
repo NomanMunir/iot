@@ -52,6 +52,12 @@ echo "Waiting for Argo CD to start..."
 kubectl wait --for=condition=available --timeout=600s deployment/argocd-server -n argocd
 
 echo "=========================================="
+echo "6. Extracting Argo CD Password"
+echo "=========================================="
+kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d > argocd-password.txt || echo "Secret not found (password may have been changed)"
+echo "Argo CD admin password saved to: argocd-password.txt"
+
+echo "=========================================="
 echo "6. Deploying Local GitLab"
 echo "=========================================="
 kubectl apply -f ../confs/gitlab-deployment.yaml
