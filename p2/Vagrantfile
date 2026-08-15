@@ -1,8 +1,7 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 
-# Provider variable: Set to "libvirt" (KVM) or "virtualbox"
-# Can also be set via environment variable: export VAGRANT_DEFAULT_PROVIDER=libvirt
+
 PROVIDER = ENV['VAGRANT_DEFAULT_PROVIDER'] || "libvirt"
 
 machines=[
@@ -26,13 +25,11 @@ Vagrant.configure("2") do |config|
 
       node.vm.synced_folder "./confs", "/vagrant/confs", type: "rsync"
 
-      # KVM / Libvirt Provider Config (Primary)
       node.vm.provider "libvirt" do |lv|
         lv.memory = machine[:ram]
         lv.cpus = machine[:cpu]
       end
 
-      # VirtualBox Provider Config (Fallback)
       node.vm.provider "virtualbox" do |vb|
         vb.gui = false
         vb.memory = machine[:ram]

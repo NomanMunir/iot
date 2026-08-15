@@ -10,7 +10,6 @@ rc-update add chronyd default
 rc-service chronyd start
 sleep 3
 
-# Dynamically detect interface
 IFACE="$(ip -o addr show | grep '192\.168\.56\.' | awk '{print $2}' | head -n 1)"
 IFACE="${IFACE:-eth1}"
 
@@ -42,7 +41,6 @@ export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
 
 timeout 300 sh -c 'until kubectl get nodes | grep -q "Ready"; do echo "Waiting for k3s to be ready..."; sleep 5; done'
 
-# Apply workloads
 kubectl apply -f /vagrant/confs/app1/deployment.yaml
 kubectl apply -f /vagrant/confs/app2/deployment.yaml
 kubectl apply -f /vagrant/confs/app3/deployment.yaml
