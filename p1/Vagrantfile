@@ -1,11 +1,15 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 
-require 'securerandom'
+# Load environment variables from .env file if it exists
+if File.exist?('.env')
+  File.readlines('.env').each do |line|
+    key, value = line.strip.split('=', 2)
+    ENV[key] = value if key && value && !line.start_with?('#')
+  end
+end
 
-# Generate a strong, random token to securely join the worker to the server.
-# This replaces the unreliable synced-folder token passing.
-k3s_token = SecureRandom.hex(24)
+k3s_token = ENV['K3S_TOKEN'] || "default-iot-k3s-token-12345"
 
 PROVIDER = ENV['VAGRANT_DEFAULT_PROVIDER'] || "libvirt"
 

@@ -1,11 +1,3 @@
-
-# Vagrant
 .vagrant/
-.vagrant_private_keys
 *.log
-
-# K3s
-node-token
-kubecfg.yaml
-kubeconfig
-config.yaml
+.env
