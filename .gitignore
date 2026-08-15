@@ -1,9 +1,13 @@
+# Vagrant data
+.vagrant/
 
-# Vagrant / VM artifacts
-**/.vagrant/
+# Log files
 *.log
 
-# K3s join token generated during provisioning (do not commit)
-p1/node-token
-p1/node-token.ready
+# Environment variables and secrets
+.env
+argocd-password.txt
 
+# OS generated files
+.DS_Store
+Thumbs.db
