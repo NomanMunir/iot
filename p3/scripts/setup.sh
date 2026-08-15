@@ -47,7 +47,7 @@ else
     echo "Argo CD is already installed, skipping creation."
 fi
 
-echo "Waiting for Argo CD to start (this can take a few minutes)..."
+echo "Waiting for Argo CD to start (this can take some time)..."
 kubectl wait --for=condition=available --timeout=600s deployment/argocd-server -n argocd
 
 echo "=========================================="
@@ -64,7 +64,7 @@ echo ""
 echo "To access Argo CD:"
 echo "1. Run this port-forward command in a separate terminal:"
 echo "   kubectl port-forward svc/argocd-server -n argocd 8081:443"
-echo "2. Open your browser and go to: https://localhost:8081"
+echo "2. Go to: https://localhost:8081"
 echo ""
 echo "To apply your GitOps application, run:"
 echo "kubectl apply -f ../confs/application.yaml"
