@@ -1,13 +1,26 @@
-# Vagrant data
+# Vagrant cache and VM states
 .vagrant/
+*.vmdk
+*.box
 
-# Log files
+# Logs and runtime files
 *.log
+*.pid
 
-# Environment variables and secrets
+# Environment variables, credentials, and secrets
 .env
+.env.*
+**/.env
 argocd-password.txt
+*password.txt
+*token.txt
+*.kubeconfig
 
-# OS generated files
+# Editor and OS clutter
 .DS_Store
 Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
