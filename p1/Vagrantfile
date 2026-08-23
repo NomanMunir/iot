@@ -15,7 +15,8 @@ PROVIDER = ENV['VAGRANT_DEFAULT_PROVIDER'] || "libvirt"
 
 Vagrant.configure("2") do |config|
 
-  BOX_IMAGE = "generic/alpine319"
+  BOX_IMAGE = "nmunir/alpine"
+  BOX_URL   = "https://github.com/NomanMunir/vagrant-boxes/releases/download/alpine-v1.0.0/alpine-latest.box"
 
   config.vm.provider "libvirt" do |lv|
     lv.cpus = 1
@@ -31,6 +32,7 @@ Vagrant.configure("2") do |config|
 
   config.vm.define "nmunirS" do |server|
     server.vm.box = BOX_IMAGE
+    server.vm.box_url = BOX_URL
     server.vm.hostname = "nmunirS"
     
     server.vm.network "private_network", ip: "192.168.56.110"
@@ -40,6 +42,7 @@ Vagrant.configure("2") do |config|
 
   config.vm.define "nmunirSW" do |worker|
     worker.vm.box = BOX_IMAGE
+    worker.vm.box_url = BOX_URL
     worker.vm.hostname = "nmunirSW"
 
     worker.vm.network "private_network", ip: "192.168.56.111"
