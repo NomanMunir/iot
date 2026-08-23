@@ -1,13 +1,16 @@
 #!/bin/bash
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+CONFS_DIR="${SCRIPT_DIR}/../confs"
+
 echo "=========================================="
 echo "1. Installing Prerequisites (Docker, Curl)"
 echo "=========================================="
 sudo apt-get update
 sudo apt-get install -y docker.io curl ca-certificates
 sudo systemctl enable --now docker
-sudo usermod -aG docker $USER
+sudo usermod -aG docker "$USER" 2>/dev/null || true
 
 echo "=========================================="
 echo "2. Installing K3d and Kubectl"
@@ -47,25 +50,32 @@ else
     echo "Argo CD is already installed, skipping creation."
 fi
 
+# Enable insecure mode for Argo CD server so Ingress can route HTTP without TLS redirect loops
+kubectl patch configmap argocd-cmd-params-cm -n argocd --type merge -p '{"data":{"server.insecure":"true"}}' 2>/dev/null || true
+
 echo "Waiting for Argo CD to start (this can take some time)..."
 kubectl wait --for=condition=available --timeout=600s deployment/argocd-server -n argocd
 
 echo "=========================================="
 echo "6. Extracting Argo CD Password"
 echo "=========================================="
-kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d > argocd-password.txt
+kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d > "${SCRIPT_DIR}/argocd-password.txt"
+
+echo "=========================================="
+echo "7. Deploying Ingress & Application"
+echo "=========================================="
+kubectl apply -f "${CONFS_DIR}/argocd-ingress.yaml"
+kubectl apply -f "${CONFS_DIR}/application.yaml"
+
 echo ""
 echo "=========================================="
-echo "Setup Complete!"
-echo "Argo CD admin password saved to: argocd-password.txt"
+echo "🎉 Setup Complete!"
+echo "=========================================="
+echo "Argo CD admin password saved to: ${SCRIPT_DIR}/argocd-password.txt"
 echo "Username: admin"
-echo "Password: $(cat argocd-password.txt)"
+echo "Password: $(cat "${SCRIPT_DIR}/argocd-password.txt")"
 echo ""
-echo "To access Argo CD:"
-echo "1. Run this port-forward command in a separate terminal:"
-echo "   kubectl port-forward svc/argocd-server -n argocd 8081:443"
-echo "2. Go to: https://localhost:8081"
-echo ""
-echo "To apply your GitOps application, run:"
-echo "kubectl apply -f ../confs/application.yaml"
+echo "Access URLs (ensure '127.0.0.1 argocd.local' is in your /etc/hosts):"
+echo "👉 Argo CD UI: http://argocd.local:8080"
+echo "👉 App URL:    http://localhost:8080"
 echo "=========================================="

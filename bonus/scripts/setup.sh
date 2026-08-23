@@ -1,13 +1,16 @@
 #!/bin/bash
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+CONFS_DIR="${SCRIPT_DIR}/../confs"
+
 echo "=========================================="
 echo "1. Installing Prerequisites (Docker, Curl)"
 echo "=========================================="
 sudo apt-get update
 sudo apt-get install -y docker.io curl ca-certificates
 sudo systemctl enable --now docker
-sudo usermod -aG docker $USER
+sudo usermod -aG docker "$USER" 2>/dev/null || true
 
 echo "=========================================="
 echo "2. Installing K3d and Kubectl"
@@ -48,31 +51,44 @@ if ! kubectl get deployment argocd-server -n argocd >/dev/null 2>&1; then
 else
     echo "Argo CD is already installed, skipping creation."
 fi
+
+# Enable insecure mode for Argo CD server so Ingress can route HTTP without TLS redirect loops
+kubectl patch configmap argocd-cmd-params-cm -n argocd --type merge -p '{"data":{"server.insecure":"true"}}' 2>/dev/null || true
+
 echo "Waiting for Argo CD to start..."
 kubectl wait --for=condition=available --timeout=600s deployment/argocd-server -n argocd
 
 echo "=========================================="
 echo "6. Extracting Argo CD Password"
 echo "=========================================="
-kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d > argocd-password.txt || echo "Secret not found (password may have been changed)"
-echo "Argo CD admin password saved to: argocd-password.txt"
+kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d > "${SCRIPT_DIR}/argocd-password.txt" || echo "Secret not found (password may have been changed)"
+echo "Argo CD admin password saved to: ${SCRIPT_DIR}/argocd-password.txt"
 
 echo "=========================================="
-echo "6. Deploying Local GitLab"
+echo "7. Deploying Local GitLab & Ingresses"
 echo "=========================================="
-kubectl apply -f ../confs/gitlab-deployment.yaml
-kubectl apply -f ../confs/gitlab-service.yaml
-kubectl apply -f ../confs/gitlab-ingress.yaml
+kubectl apply -f "${CONFS_DIR}/gitlab-deployment.yaml"
+kubectl apply -f "${CONFS_DIR}/gitlab-service.yaml"
+kubectl apply -f "${CONFS_DIR}/gitlab-ingress.yaml"
+kubectl apply -f "${CONFS_DIR}/argocd-ingress.yaml"
 
 echo "Waiting for GitLab to start (THIS CAN TAKE 5-10 MINUTES)..."
 kubectl wait --for=condition=available --timeout=900s deployment/gitlab -n gitlab || echo "GitLab is still starting in the background..."
 
 echo "=========================================="
-echo "7. Final Instructions"
+echo "8. Applying Argo CD Application"
 echo "=========================================="
-echo "1. Run: sudo nano /etc/hosts and add '127.0.0.1 gitlab.local'"
-echo "2. Access GitLab at: http://gitlab.local:8080"
-echo "3. Create a public repository named 'iot-nmunir' in GitLab"
-echo "4. Push your yaml files to your local GitLab"
-echo "5. Tell ArgoCD to sync from GitLab: kubectl apply -f ../confs/application.yaml"
+kubectl apply -f "${CONFS_DIR}/application.yaml"
+
+echo ""
+echo "=========================================="
+echo "🎉 Bonus Setup Complete!"
+echo "=========================================="
+echo "Make sure your /etc/hosts includes:"
+echo "127.0.0.1   argocd.local gitlab.local"
+echo ""
+echo "Access URLs:"
+echo "👉 Argo CD UI: http://argocd.local:8080 (Username: admin, Password: $(cat "${SCRIPT_DIR}/argocd-password.txt" 2>/dev/null || echo 'see argocd-password.txt'))"
+echo "👉 GitLab UI:  http://gitlab.local:8080"
+echo "👉 App URL:    http://localhost:8080"
 echo "=========================================="
