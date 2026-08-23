@@ -1,8 +1,12 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 
+PROVIDER = ENV['VAGRANT_DEFAULT_PROVIDER'] || "libvirt"
+
 BOX_IMAGE = "nmunir/alpine"
-BOX_URL   = "https://raw.githubusercontent.com/NomanMunir/vagrant-boxes/main/alpine.json"
+BOX_URL = (PROVIDER == "virtualbox") ?
+  "https://github.com/NomanMunir/vagrant-boxes/releases/download/alpine-v1.0.0/alpine-latest.box" :
+  "https://github.com/NomanMunir/vagrant-boxes/releases/download/alpine-v1.0.0/alpine-latest-libvirt.box"
 
 machines = [
   {
